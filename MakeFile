@@ -1,0 +1,79 @@
+SSH_KEY = .ssh
+EMAIL = your-email@gmail.com
+USERNAME = yout-username
+
+#for the path enter ".ssh"
+generate: 
+	read -p "Enter the user-name: " USER_NAME; \
+	ssh-keygen -t rsa -b 4096 -C "$$USER_NAME"; \
+
+
+repo:
+	eval $$(ssh-agent -s); \
+	ssh-add $(SSH_KEY); \
+	ssh-add -l; \
+	ssh -T git@github.com; \
+	read -p "Enter the repository name: " REPO_NAME; \
+	mkdir -p $$REPO_NAME; \
+	cd $$REPO_NAME; \
+	git init; \
+	echo "# $$REPO_NAME" >> README.md; \
+	git add .; \
+	read -p "Enter the commit text: " COMMIT_TEXT; \
+	git commit -m "$$COMMIT_TEXT"; \
+	git branch -M master; \
+	git remote add origin git@github.com:$(USERNAME)/$$REPO_NAME.git; \
+	git push -u origin master; \
+
+push: 
+	eval $$(ssh-agent -s); \
+	ssh-add $(SSH_KEY); \
+	ssh-add -l; \
+	ssh -T git@github.com; \
+	read -p "Enter the repository name: " REPO_NAME; \
+	cd $$REPO_NAME; \
+	git init; \
+	git add .; \
+	read -p "Enter the commit text: " COMMIT_TEXT; \
+	git commit -m "$$COMMIT_TEXT"; \
+	git branch -M master; \
+	git remote add origin git@github.com:$(USERNAME)/$$REPO_NAME.git; \
+	git push -f origin master; \
+
+pull:
+	eval $$(ssh-agent -s); \
+	ssh-add $(SSH_KEY); \
+	ssh-add -l; \
+	ssh -T git@github.com; \
+	git config --global --add safe.directory /home/me; \
+	read -p "Enter the repository name: " REPO_NAME; \
+	cd $$REPO_NAME; \
+	git remote add origin git@github.com:$(USERNAME)/$$REPO_NAME.git; \
+
+
+
+clean:
+	@read -p "Enter the name of the repository you want to clean: " REPO_NAME; \
+	if [ ! -d "$$REPO_NAME" ]; then \
+		echo "Repository '$$REPO_NAME' does not exist."; \
+		exit 1; \
+	fi; \
+	read -p "Are you sure you want to clear Git origin and cache (y/n)? " confirm; \
+	if [ "$$confirm" = "y" ]; then \
+		cd $$REPO_NAME; \
+		find . -type d -name .git -execdir rm -rf {} \; ; \
+		git rm -f --cached -r --ignore-unmatch . ; \
+		git submodule deinit -f --all; \
+		git remote remove origin; \
+		rm -rf .git; \
+		echo "Git origin, cache, and history cleared from '$$REPO_NAME'."; \
+	else \
+		echo "Operation canceled."; \
+		exit 1; \
+	fi
+
+
+
+
+
+.PHONY: connect push clean
