@@ -1,6 +1,6 @@
 SSH_KEY = .ssh
 EMAIL = your-email@gmail.com
-USERNAME = yout-username
+USERNAME = your-username
 
 #for the path enter ".ssh"
 generate: 
